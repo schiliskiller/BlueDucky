@@ -16,17 +16,55 @@
 int scanTime = 5;
 NimBLEScan* pBLEScan;
 
-class MyScanCallbacks : public NimBLEScanCallbacks {
+// esta es una clase callback que se ejecuta automáticamente cada vez que el ESP32
+// detecta un dispositivo BLE
+class MyScanCallbacks: public NimBLEScanCallbacks {
   void onResult(const NimBLEAdvertisedDevice* advertisedDevice) override {
-    Serial.print("Device Found: ");
+    Serial.print("[Ducky dice]: Dispositivo detectado ദ്ദി◝ ⩊ ◜) = ");
     Serial.print(advertisedDevice->getAddress().toString().c_str());
     Serial.print(" | RSSI: ");
     Serial.print(advertisedDevice->getRSSI());
     Serial.print(" dBm");
     
+    // mostrar nombre si lo tiene disponible
     if (advertisedDevice->haveName()) {
       Serial.print(" | Name: ");
       Serial.print(advertisedDevice->getName().c_str());
+    }
+
+    // intentar saber le sistema operativo por el Manufacturer Data
+    if(advertisedDevice->haveManufacturerData())
+    {
+      std::string mData= advertisedDevice->getManufacturerData();
+
+      // los dos primeros bytes del manufacturer son el company ID
+      if(mData.length() >= 2)
+      {
+        uint16_t companyID=(uint8_t)mData[1]<<8 | (uint8_t)mData[0];
+
+        Serial.print(" | Tipo estimado: ");
+        switch(companyID) {
+          case 0x004C: // Apple Inc.
+            Serial.print("Apple (iPhone/iPad/Mac/AirPods)");
+            break;
+          case 0x0006: // Microsoft
+            Serial.print("Windows / Microsoft");
+            break;
+          case 0x00E0: // Google Inc.
+          case 0x055D:
+            Serial.print("Android / Google / Chromecast");
+            break;
+          case 0x0075: // Samsung Electronics
+            Serial.print("Samsung (Android)");
+            break;
+          case 0x012D: // Sony
+            Serial.print("Sony Device");
+            break;
+          default:
+            Serial.printf("Desconocido (ID: 0x%04X)", companyID);
+            break;
+        }
+      }
     }
     Serial.println();
   }
@@ -137,31 +175,44 @@ void ConnectWiFi_AP()
   Serial.println(WiFi.softAPIP());
 }
 
-void initScanBLE(bool activeScan, uint16_t interval, uint16_t window)
+void initScanBLE()
 {
+  // inicializar la pila BLE 
   NimBLEDevice::init("");
+  // crear y configurar el objeto de escaneo
   pBLEScan = NimBLEDevice::getScan();
-  pBLEScan->setScanCallbacks(new MyScanCallbacks());
+
+  // vincular la clase de callback para que procese los dispositivos encontrados
+  pBLEScan->setScanCallbacks(new MyScanCallbacks()); // false para procesar duplicados
+  
+  // solicita más datos al dispositivos
   pBLEScan->setActiveScan(true);
-  pBLEScan->setInterval(100);
-  pBLEScan->setWindow(40); 
+
+  // tiempo que pasa escuchando en cada canal en milisegundos
+  pBLEScan->setInterval(160); //100ms
+  pBLEScan->setWindow(80);  // 50ms
+
+  pBLEScan->setDuplicateFilter(false);
 }
 
-void scanBLE(uint32_t duration)
+void ContinuousBLE()
 {
-  if (millis() - ultimoEscaneo > intervaloEscaneo)
+  // si no está corriendo, arrancarlo en modo infinito
+  if (!pBLEScan->isScanning())
   {
-    if (!pBLEScan->start(duration))
-    {
-      Serial.println("Error: Conflictos con escaneo Bluetooth");
-    }
-
-    NimBLEScanResults foundDevices = pBLEScan->getResults();
-    Serial.print("Devices found: ");
-    Serial.println(foundDevices.getCount());
-
-    pBLEScan->clearResults(); // Free memory
-
-    ultimoEscaneo = millis();
+    Serial.println("[Ducky dice]: Iniciando escaneo continuo BLE ദ്ദി◝ ⩊ ◜)...");
+    // duration = 0 significa escaneo continuo en segundo plano
+    // scanCompleteCB = nullptr
+    // is_continue = false
+    pBLEScan->start(0, false);
   }
+}
+
+void scanBLE()
+{
+  // forzar la duración a 10 segundos 
+  Serial.println("\n[Ducky dice]: Comenzando el escaneo BLE de 10 segundos... ദ്ദി◝ ⩊ ◜)");
+  pBLEScan = NimBLEDevice::getScan();
+  pBLEScan->start(10,false);
+  pBLEScan->clearResults();
 }
