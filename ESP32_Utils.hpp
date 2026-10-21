@@ -33,7 +33,7 @@ void Escanear()
 
   if(n == 0)
   {
-    Serial.println("BlueDucky no encontró redes :c");
+    Serial.println("[Ducky dice]: No encontré redes (° n °)");
   }
   else
   {
