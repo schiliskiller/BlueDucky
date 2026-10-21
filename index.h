@@ -1,4 +1,4 @@
-// este es el frontend basado de, sin embargo, las animaciones me ayudó la ia generativa
+// este es el frontend basado de, sin embargo, las animaciones y la mejora del formato me ayudó la ia generativa
 // https://github.com/ekv88/esp32-bluetooth-rubber-ducky/tree/main
 
 #pragma once
@@ -15,7 +15,6 @@ const char PAGE_INDEX[] PROGMEM = R"rawliteral(
 <title>BlueDucky</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700&display=swap" rel="stylesheet">
 
-/* CSS  */
 <style>
 :root {
   --bg:   #020507;
@@ -70,8 +69,8 @@ header{height:40px;background:#010304;border-bottom:1px solid var(--g3);
 .pill.targets{border-color:var(--r0);color:var(--r0)}
 
 /* ── LAYOUT ──────────────────────────────────────── */
-.wrap{display:grid;grid-template-columns:256px 1fr 290px;gap:5px;
-  padding:5px;height:calc(100vh - 40px - 30px)}
+.wrap{display:grid;grid-template-columns:220px 1fr 450px;gap:6px;
+  padding:6px;height:calc(100vh - 40px - 30px)}
 .panel{background:var(--surf);border:1px solid var(--g3);
   display:flex;flex-direction:column;overflow:hidden}
 .ph{padding:6px 10px;border-bottom:1px solid var(--g3);background:#030a07;
@@ -182,10 +181,20 @@ textarea.raw::selection{background:rgba(0,255,136,.2)}
 .launch-info span{color:var(--y0)}
 
 /* ── CONSOLE ─────────────────────────────────────── */
-.log-pane{flex:1;overflow-y:auto;padding:8px;font-size:11px}
+.log-pane{
+  flex:1;
+  overflow-y:auto;
+  padding:10px;
+  font-size:11px;
+  line-height:1.45;       /* mejor respiración entre renglones */
+  word-break:break-word;  /* evita que comandos o rutas largas rompan el contenedor */
+}
 .log-pane::-webkit-scrollbar{width:3px}
 .log-pane::-webkit-scrollbar-thumb{background:var(--g3)}
-.ll{margin-bottom:3px;line-height:1.5}
+.ll{
+  margin-bottom:4px;
+  white-space:pre-wrap;   /* Respeta saltos y espacios sin desbordar */
+}
 .ll.sys{color:var(--c0)}.ll.ok{color:var(--g0)}.ll.warn{color:var(--y0)}
 .ll.err{color:var(--r0)}.ll.dim{color:var(--ink2)}.ll.info{color:var(--ink)}
 .ll-t{color:var(--g3)}
@@ -213,7 +222,30 @@ footer{height:30px;background:#010304;border-top:1px solid var(--g3);
 .mat-sub{color:var(--ink2);font-size:11px;margin-top:14px;letter-spacing:2px;
   opacity:0;transition:opacity .6s .4s}
 .mat-sub.v{opacity:1}
+
+.cmd-row{border-top:1px solid var(--g3);padding:5px 8px;display:flex;
+  align-items:center;gap:7px;background:#030a07;flex-shrink:0}
+.cmd-row label{color:var(--g0);font-weight:700;font-size:12px;flex-shrink:0}
+#cmdIn{flex:1;background:transparent;border:none;color:var(--g0);
+  font-family:'JetBrains Mono',monospace;font-size:11px;outline:none;caret-color:var(--g0)}
+#cmdIn::placeholder{color:var(--ink2)}
+
+@media (max-width: 900px) {
+  html, body { overflow: auto; }
+  .wrap {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    overflow-y: visible;
+  }
+  .panel {
+    min-height: 280px;
+    margin-bottom: 6px;
+  }
+}
+
 </style>
+
 </head>
 <body>
 
@@ -223,7 +255,6 @@ footer{height:30px;background:#010304;border-top:1px solid var(--g3);
   <div class="hpills">
     <span class="pill ok">BT: ON</span>
     <span class="pill ok" id="sdPill">SD: OK</span>
-    <span class="pill hi">AP: 192.168.4.1</span>
     <span class="pill" id="tgtPill">TARGETS: 0</span>
   </div>
 </header>
@@ -317,7 +348,7 @@ ENTER</textarea>
     <!-- LAUNCH BAR -->
     <div class="launch-bar">
       <div class="launch-info">PAYLOAD: <span id="activePayload">sin cargar</span></div>
-      <button class="btn run" onclick="launch()">▶ LANZAR RUN</button>
+      <button class="btn run" onclick="launch()">▶ LANZAR</button>
     </div>
   </div>
 
@@ -328,6 +359,13 @@ ENTER</textarea>
       <span class="cursor"></span>
     </div>
     <div class="log-pane" id="logPane"></div>
+
+    <div class="cmd-row">
+      <label>$</label>
+      <input id="cmdIn" type="text" placeholder="escribe --help para ver comandos..."
+        onkeydown="handleCmd(event)" autocomplete="off" spellcheck="false">
+    </div>
+
     <div class="pf">
       <button class="btn d" onclick="clearLog()">CLEAR</button>
       <button class="btn" onclick="exportLog()">EXPORT</button>
@@ -338,8 +376,8 @@ ENTER</textarea>
 
 <!-- FOOTER -->
 <footer>
-  <span>CVE-2023-45866 | HID BT INJECTION | FEI PENTESTING LAB</span>
-  <span class="fstatus" id="fStat">SISTEMA LISTO</span>
+  <span>CVE-2023-45866 | FEI PENTESTING</span>
+  <span class="fstatus" id="fStat">DUCKY LISTO</span>
 </footer>
 
 <!-- MATRIX OVERLAY -->
@@ -347,7 +385,7 @@ ENTER</textarea>
   <canvas id="matCv"></canvas>
   <div class="mat-msg">
     <div class="mat-tgt" id="matTgt"></div>
-    <div class="mat-h" id="matH">[ PAYLOAD DEPLOYED ]</div>
+    <div class="mat-h" id="matH">[ PAYLOAD MANDADO ]</div>
     <div class="mat-sub" id="matSub">CLICK PARA CERRAR</div>
   </div>
 </div>
@@ -665,8 +703,9 @@ function showMatrix(targets){
     }
     frame++;
     if(frame===30)tgt.classList.add('v');
-    if(frame===70)h.classList.add('v');
-    if(frame===110)sub.classList.add('v');
+    //if(frame===70)h.classList.add('v');
+    if(frame===70){h.classList.add('v'); setTimeout(closeMatrix, 3000)} //cerrar despues de 3 segundos
+    //if(frame===110)sub.classList.add('v');
   },28);
 }
 
@@ -677,17 +716,99 @@ function closeMatrix(){
   setFooter('PAYLOAD EJECUTADO');
 }
 
+// ── COMMAND HANDLER ────────────────────────────────────────────────────
+function handleCmd(e){
+  if(e.key!=='Enter')return;
+  const raw=e.target.value.trim();
+  e.target.value='';
+  if(!raw)return;
+  log_('<span style="color:var(--ink2)">$</span> '+raw,'dim');
+  const cmd=raw.toLowerCase();
+  if(cmd==='--tutorial')showTutorial();
+  else if(cmd==='--help')showHelp();
+  else if(cmd==='--clear')clearLog();
+  else if(cmd==='--scan')scanDevices();
+  else if(cmd==='--status')showStatus();
+  else if(cmd==='--targets'){
+    if(!selectedDev.size){log_('Sin targets seleccionados','warn');return}
+    log_('Targets activos','sys');
+    [...selectedDev].forEach(i=>{
+      const d=DEVICES[i];
+      log_(`${d.ico} ${d.name} | ${d.mac} | ${d.rssi}dBm`,'warn');
+    });
+  } else {
+    log_(`Comando no reconocido: "${raw}" — escribe <span style="color:var(--g0)">--help</span>`,'err');
+  }
+}
+
+function showHelp(){
+  const cmds=[
+    ['--tutorial','cómo comenzar paso a paso'],
+    ['--scan',    'escanear dispositivos'],
+    ['--targets', 'listar targets seleccionados'],
+    ['--status',  'estado actual del sistema'],
+    ['--clear',   'limpiar la consola'],
+  ];
+  log_('Comandos disponibles','sys');
+  cmds.forEach(([c,d])=>log_(`<span style="color:var(--g0)">${c.padEnd(14)}</span> ${d}`,'info'));
+}
+
+function showTutorial(){
+  const pasos=[
+    {t:'TUTORIAL',type:'sys'},
+    {t:'1: Escanear dispositivos',type:'ok'},
+    {t:'  Presiona [RE-SCAN] en el panel izquierdo.',type:'info'},
+    {t:'  Los que muestren [CVE OK] son vulnerables.',type:'warn'},
+    {t:'&nbsp;'},
+    {t:'2: Seleccionar target(s)',type:'ok'},
+    {t:'  Click en uno o varios dispositivos.',type:'info'},
+    {t:'  El contador TARGETS: N aparece arriba.',type:'dim'},
+    {t:'&nbsp;'},
+    {t:'3: Cargar un payload',type:'ok'},
+    {t:'  LIBRARY > payloads predefinidos.',type:'info'},
+    {t:'  BUILDER > armar pasos visualmente.',type:'info'},
+    {t:'  RAW     > escribir DuckyScript directo.',type:'info'},
+    {t:'&nbsp;'},
+    {t:'4: Lanzar',type:'ok'},
+    {t:'  Presiona el boton rojo [LANZAR].',type:'warn'},
+    {t:'  El payload se inyecta via Bluetooth HID.',type:'warn'},
+    {t:'escribe --help para ver todos los comandos.',type:'dim'},
+  ];
+  pasos.forEach((p,i)=>setTimeout(()=>log_(p.t||'&nbsp;',p.type||'dim'),i*55));
+}
+
+function showStatus(){
+  log_('Estado del sistema','sys');
+  log_('BT        : ACTIVO','ok');
+  log_('SD        : MONTADA','ok');
+  log_(`Targets   : ${selectedDev.size} seleccionados`,selectedDev.size?'warn':'dim');
+  log_(`Payload   : ${document.getElementById('activePayload').textContent}`,activeId?'ok':'dim');
+  log_('Exploit   : CVE-2023-45866 HID Injection','warn');
+}
+
 // ── INIT ──────────────────────────────────────────────────────────────────
 renderDevices(DEVICES);
 renderLib();
-log_('BlueDucky inicializado','sys');
-log_('CVE-2023-45866 HID injection engine <span style="color:var(--g0)">READY</span>','ok');
-log_('AP mode activo — ','info');
-log_('','ok');
-log_('Esperando selección de targets...','dim');
 toBuilder();
+
+const WELCOME=[
+  {t:'¡Te damos la bienvenida a BlueDucky ദ്ദി◝ ⩊ ◜)!',type:'sys',d:320},
+  {t:'&nbsp;',type:'dim',d:390},
+  {t:'BlueDucky trabaja desde la ESP32 + MicroSD para explotar la vulnerabilidad CVE-2023-45866',type:'warn',d:460},
+  {t:'&nbsp;',type:'dim',d:540},
+  {t:'Este proyecto fue desarrollado por:',type:'info',d:610},
+  {t:'Brayan Usciel Seseña Hidalgo',type:'info',d:690},
+  {t:'Martha Denisse Lara Xocuis',type:'info',d:770},
+  {t:'Alan Martínez Schleske',type:'info',d:850},
+  {t:'Para la Experiencia Educativa de Pentesting',type:'info',d:940},
+  {t:'&nbsp;',type:'dim',d:1100},
+  {t:'<span style="color:var(--g0)">--tutorial</span> para ver cómo comenzar.',type:'ok',d:1180},
+  {t:'<span style="color:var(--ink2)">--help</span> para ver todos los comandos.',type:'dim',d:1260},
+  {t:'&nbsp;',type:'dim',d:1340},
+  {t:'Ducky listo ദ്ദി◝ ⩊ ◜)  ¡A jugar!',type:'sys',d:1420},
+];
+WELCOME.forEach(m=>setTimeout(()=>log_(m.t,m.type),m.d));
 </script>
 </body>
 </html>
-
 )rawliteral";
