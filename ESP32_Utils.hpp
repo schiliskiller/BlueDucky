@@ -5,6 +5,32 @@
 
 #include "lista_proveedores.hpp"
 #include <string.h>
+#include <NimBLEDevice.h>
+
+#include <FS.h>
+#include <SD.h>
+#include <SPI.h>
+
+// https://zbotic.in/esp32-ble-scanner-detect-nearby-devices-signal-strength/
+
+int scanTime = 5;
+NimBLEScan* pBLEScan;
+
+class MyScanCallbacks : public NimBLEScanCallbacks {
+  void onResult(const NimBLEAdvertisedDevice* advertisedDevice) override {
+    Serial.print("Device Found: ");
+    Serial.print(advertisedDevice->getAddress().toString().c_str());
+    Serial.print(" | RSSI: ");
+    Serial.print(advertisedDevice->getRSSI());
+    Serial.print(" dBm");
+    
+    if (advertisedDevice->haveName()) {
+      Serial.print(" | Name: ");
+      Serial.print(advertisedDevice->getName().c_str());
+    }
+    Serial.println();
+  }
+};
 
 const char* cifrado(wifi_auth_mode_t t)
 {
@@ -109,4 +135,33 @@ void ConnectWiFi_AP()
   Serial.println(ssid);
   Serial.print("Direccion IP:\t");
   Serial.println(WiFi.softAPIP());
+}
+
+void initScanBLE(bool activeScan, uint16_t interval, uint16_t window)
+{
+  NimBLEDevice::init("");
+  pBLEScan = NimBLEDevice::getScan();
+  pBLEScan->setScanCallbacks(new MyScanCallbacks());
+  pBLEScan->setActiveScan(true);
+  pBLEScan->setInterval(100);
+  pBLEScan->setWindow(40); 
+}
+
+void scanBLE(uint32_t duration)
+{
+  if (millis() - ultimoEscaneo > intervaloEscaneo)
+  {
+    if (!pBLEScan->start(duration))
+    {
+      Serial.println("Error: Conflictos con escaneo Bluetooth");
+    }
+
+    NimBLEScanResults foundDevices = pBLEScan->getResults();
+    Serial.print("Devices found: ");
+    Serial.println(foundDevices.getCount());
+
+    pBLEScan->clearResults(); // Free memory
+
+    ultimoEscaneo = millis();
+  }
 }
