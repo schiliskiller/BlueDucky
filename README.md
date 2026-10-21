@@ -3,12 +3,12 @@
 Este proyecto ha sido desarrollado exclusivamente con fines educativos, de investigación y para evaluaciones de seguridad en entornos controlados bajo autorización previa.
 El uso de esta herramienta contra infraestructuras o terminales sin consentimiento explícito es responsabilidad exclusiva del usuario final.
 
---
+---
 
 # BlueDucky
 Hardware de pentesting para pruebas de penetración a la vulnerabilidad CVE-2023-45866 basada en la ESP32 con almacenamiento MicroSD, suplantación dinámica de SSID y panel de control web.
 
--- 
+--- 
 ## Descripción del proyecto
 BlueDucky es un dispositivo diseñado para auditorías de seguridad y pruebas de inyección HID no autenticada vía Bluetooth.
 
@@ -18,13 +18,13 @@ El sistema opera de la siguiente forma:
 3. **Despliega** una interfaz gráfica retro alojada en memoria de programa, permitiendo armar scripts visualmente, escribir DuckyScript o cargarlos desde una tarjeta MicroSD.
 4. **Emula** teclado y ratón inalámbricos para inyección de comandos en terminales vulnerables.
 
---
+---
 ## Hardware
 | Componente | Especificación / Modelo | Propósito |
 | :--- | :--- | :--- |
 | **Microcontrolador** | ESP32 DevKit V1 (30 pines) | Escaneo Wi-Fi, servidor HTTP, pila Bluetooth BLE |
 | **Regulador de Tensión** | L7805CV (TO-220, lineal) | Reducción de 9V (batería) a 5V regulados hacia el pin `VIN` |
-| **Almacenamiento** | Módulo MicroSD SPI | Persistencia de payloads DuckyScript y registros de auditoría |
+| **Almacenamiento** | Módulo MicroSD | Persistencia de payloads DuckyScript y registros de auditoría |
 | **Alimentación** | Batería alcalina de 9V (con switch ON/OFF) | Autonomía portátil |
 | **Gabinete** | Impresión 3D MakerBot PLA | Alojamiento modular para protoboard y componentes |
 
@@ -42,7 +42,7 @@ BlueDucky/
 └── index.h                       # interfaz web retro (HTML/CSS/JS) almacenada en PROGMEM
 ```
 
--- 
+--- 
 
 ## Guía de uso
 1. **Encendido:** Presionar el interruptor lateral o conectar mediante cable USB-C.
