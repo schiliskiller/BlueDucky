@@ -778,6 +778,42 @@ async function cargarDirectorioSD() {
     log_('[!] Error al leer la SD desde la web', 'err');
   }
 }
+
+// Asumiendo que selectedDev tiene los índices de los dispositivos seleccionados
+async function launch() {
+  if (selectedDev.size === 0) {
+    log_('[!] Selecciona al menos un target', 'err');
+    return;
+  }
+
+  // 1. Extraemos TODAS las MACs seleccionadas y las unimos con comas
+  // Resultado esperado: "A4:C3:F0...,DC:A6:32...,88:C6:26..."
+  const macsArray = [...selectedDev].map(i => DEVICES[i].mac);
+  const macsString = macsArray.join(',');
+  const namesString = [...selectedDev].map(i => DEVICES[i].name).join(' | ');
+
+  log_(`[RUN] Iniciando inyección en ${macsArray.length} targets...`, 'sys');
+
+  try {
+    const response = await fetch('/api/run', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      // 2. Enviamos el string unificado bajo la llave "macs"
+      body: 'macs=' + encodeURIComponent(macsString)
+    });
+
+    if (response.ok) {
+      log_('[RUN] ESP32 recibió la lista. Ejecutando exploit múltiple...', 'ok');
+      showMatrix(namesString); 
+    } else {
+      log_('[!] Error en el ESP32 al procesar la petición', 'err');
+    }
+  } catch (error) {
+    log_('[!] Error de red: ' + error.message, 'err');
+  }
+}
 </script>
 </body>
 </html>

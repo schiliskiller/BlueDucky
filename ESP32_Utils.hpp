@@ -3,11 +3,7 @@
 
 // no se utilizó IA en este código jejeje
 
-#include "esp_bt_defs.h"
 #include "lista_proveedores.hpp"
-#include "esp_bt.h"
-#include "esp_bt_main.h"
-#include "esp_bt_device.h"
 #include <string.h>
 #include <NimBLEDevice.h>
 
@@ -281,4 +277,44 @@ void scanBLE()
   pBLEScan = NimBLEDevice::getScan();
   pBLEScan->start(10,false);
   pBLEScan->clearResults();
+}
+
+void setupBLESecurity() {
+    NimBLEDevice::init("BlueDucky_Manager");
+
+    // Configurar el tipo de autenticación
+    // false = No requiere MITM (Man In The Middle protection) -> Usa "Just Works"
+    // true, true, true = Bonding (Guardar llaves), MITM, Secure Connections
+    NimBLEDevice::setSecurityAuth(false, true, true); 
+
+    // Configurar las capacidades de Entrada/Salida del ESP32
+    // BLE_HS_IO_NO_INPUT_OUTPUT = El ESP32 no tiene pantalla ni teclado. 
+    // Esto fuerza a que la mayoría de los teléfonos usen "Just Works" (Solo un botón de Aceptar).
+    NimBLEDevice::setSecurityIOCap(BLE_HS_IO_NO_INPUT_OUTPUT);
+}
+
+bool conectarYEmparejar(NimBLEAddress direccionObjetivo) {
+    NimBLEClient* pClient = NimBLEDevice::createClient();
+    
+    Serial.printf("Conectando a: %s\n", direccionObjetivo.toString().c_str());
+    
+    // 1. Establecer la conexión básica
+    if (!pClient->connect(direccionObjetivo)) {
+        Serial.println("Fallo al conectar.");
+        NimBLEDevice::deleteClient(pClient);
+        return false;
+    }
+    
+    Serial.println("Conexión física establecida. Solicitando emparejamiento...");
+
+    // 2. Iniciar la negociación de seguridad (Pairing)
+    if (pClient->secureConnection()) {
+        Serial.println("¡Emparejamiento exitoso! Las llaves se han guardado.");
+        // Aquí ya puedes leer/escribir características que requieran autenticación
+        return true;
+    } else {
+        Serial.println("El dispositivo rechazó el emparejamiento o hubo un error (Timeout).");
+        pClient->disconnect();
+        return false;
+    }
 }
