@@ -676,7 +676,6 @@ function showTutorial(){
     {t:'TUTORIAL',type:'sys'},
     {t:'1: Escanear dispositivos',type:'ok'},
     {t:'  Presiona [RE-SCAN] en el panel izquierdo.',type:'info'},
-    {t:'  Los que muestren [CVE OK] son vulnerables.',type:'warn'},
     {t:'&nbsp;'},
     {t:'2: Seleccionar target(s)',type:'ok'},
     {t:'  Click en uno o varios dispositivos.',type:'info'},
