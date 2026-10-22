@@ -136,7 +136,7 @@ class MyScanCallbacks: public NimBLEScanCallbacks {
     }
     Serial.println("}");
     Serial.printf(" %d %s %s", nuevoDispositivo.RSSI,
-                  nuevoDispositivo.name.c_str(), nuevoDispositivo.companyName.c_str());
+                  nuevoDispositivo.name, nuevoDispositivo.companyName);
 
     // se inserta el dispositivo encontrado para que se muestre en el sitio web
     dispositivosDetectados.push_back(nuevoDispositivo);
