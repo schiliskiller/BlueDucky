@@ -246,7 +246,7 @@ void initScanBLE()
   pBLEScan = NimBLEDevice::getScan();
 
   // vincular la clase de callback para que procese los dispositivos encontrados
-  pBLEScan->setScanCallbacks(new MyScanCallbacks()); // false para procesar duplicados
+  pBLEScan->setScanCallbacks(new MyScanCallbacks(), false);
   
   // solicita más datos al dispositivos
   pBLEScan->setActiveScan(true);
