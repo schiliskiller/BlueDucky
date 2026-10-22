@@ -3,10 +3,16 @@
 
 // no se utilizó IA en este código jejeje
 
+#include "esp_bt_defs.h"
 #include "lista_proveedores.hpp"
+#include "esp_bt.h"
+#include "esp_bt_main.h"
+#include "esp_bt_device.h"
 #include <string.h>
 #include <NimBLEDevice.h>
 
+#include <string>
+#include <vector>
 #include <FS.h>
 #include <SD.h>
 #include <SPI.h>
@@ -15,6 +21,37 @@
 
 int scanTime = 5;
 NimBLEScan* pBLEScan;
+
+typedef struct bluetooth_capture {
+  esp_bd_addr_t MAC;
+  int RSSI;
+  const char *name;
+  const char *companyName;
+} BT_CAPTURE;
+
+// aqui se almacenan los dispositivos capturados por Bluetooth, todos diferentes
+std::vector<bluetooth_capture> dispositivosDetectados;
+
+// Pasamos el arreglo de destino como parámetro (uint8_t* o esp_bd_addr_t)
+bool parseMACString(std::string strng, uint8_t* addr)
+{
+  // Verificamos de forma muy básica que la longitud sea correcta (mínimo 17 caracteres para XX:XX:XX:XX:XX:XX)
+  if (strng.length() < 17 && strng.find(":") == 0) {
+    return false; // Error: formato incorrecto
+  }
+
+  // Extraemos los bytes directamente al arreglo que pasamos por parámetro
+  int extraidos = sscanf(strng.c_str(), "%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx",
+                         &addr[0], &addr[1], &addr[2], &addr[3], &addr[4], &addr[5]);
+
+  for (int i = 0; i < 6; i++)
+  {
+    Serial.printf("%x\n", addr[i]);
+  }
+  
+  // Si logró extraer los 6 bloques, devuelve true
+  return (extraidos == 6);
+}
 
 // esta es una clase callback que se ejecuta automáticamente cada vez que el ESP32
 // detecta un dispositivo BLE
@@ -25,12 +62,18 @@ class MyScanCallbacks: public NimBLEScanCallbacks {
     Serial.print(" | RSSI: ");
     Serial.print(advertisedDevice->getRSSI());
     Serial.print(" dBm");
+
     
+    const char* deviceName;
+
     // mostrar nombre si lo tiene disponible
     if (advertisedDevice->haveName()) {
       Serial.print(" | Name: ");
       Serial.print(advertisedDevice->getName().c_str());
+      deviceName = advertisedDevice->getName().c_str();
     }
+
+    const char* companyName;
 
     // intentar saber le sistema operativo por el Manufacturer Data
     if(advertisedDevice->haveManufacturerData())
@@ -46,29 +89,61 @@ class MyScanCallbacks: public NimBLEScanCallbacks {
         switch(companyID) {
           case 0x004C: // Apple Inc.
             Serial.print("Apple (iPhone/iPad/Mac/AirPods)");
+            companyName = "Apple (iPhone/iPad/Mac/AirPods)";
             break;
           case 0x0006: // Microsoft
             Serial.print("Windows / Microsoft");
+            companyName = "Windows / Microsoft";
             break;
           case 0x00E0: // Google Inc.
           case 0x055D:
             Serial.print("Android / Google / Chromecast");
+            companyName = "Android / Google / Chromecast";
             break;
           case 0x0075: // Samsung Electronics
             Serial.print("Samsung (Android)");
+            companyName = "Samsung (Android)";
             break;
           case 0x012D: // Sony
             Serial.print("Sony Device");
+            companyName = "Sony Device";
             break;
           default:
             Serial.printf("Desconocido (ID: 0x%04X)", companyID);
+            companyName = NULL;
             break;
         }
       }
     }
     Serial.println();
+
+    // convierte la direccion MAC a un arreglo de 6 nibbles
+    uint8_t macConvertida[6];
+    parseMACString(advertisedDevice->getAddress().toString(), macConvertida);
+
+    bluetooth_capture nuevoDispositivo;
+
+    memcpy(nuevoDispositivo.MAC, macConvertida, 6);
+    //nuevoDispositivo.MAC = (_desp_bd_addr_t) macConvertida;
+    nuevoDispositivo.RSSI = advertisedDevice->getRSSI();
+    nuevoDispositivo.name = deviceName;
+    nuevoDispositivo.companyName = companyName;
+
+    Serial.print("{");
+    for (int i = 0; i < 6; i++)
+    {
+      Serial.printf("%2x", nuevoDispositivo.MAC[i]);
+    }
+    Serial.println("}");
+    Serial.printf(" %d %s %s", nuevoDispositivo.RSSI,
+                  nuevoDispositivo.name, nuevoDispositivo.companyName);
+
+    // se inserta el dispositivo encontrado para que se muestre en el sitio web
+    dispositivosDetectados.push_back(nuevoDispositivo);
+    Serial.println("1");
   }
 };
+
 
 const char* cifrado(wifi_auth_mode_t t)
 {
@@ -192,7 +267,7 @@ void initScanBLE()
   pBLEScan->setInterval(160); //100ms
   pBLEScan->setWindow(80);  // 50ms
 
-  pBLEScan->setDuplicateFilter(false);
+  pBLEScan->setDuplicateFilter(true);
 }
 
 void ContinuousBLE()
