@@ -1,10 +1,12 @@
-// este es el frontend basado de, sin embargo, las animaciones y la mejora del formato me ayudó la ia generativa
+ // este es el frontend basado de, sin embargo, las animaciones y la mejora del formato me ayudó la ia generativa
+
 // https://github.com/ekv88/esp32-bluetooth-rubber-ducky/tree/main
+
 
 #pragma once
 #include <Arduino.h>
 
-// me apoyé también desde https://html.onlineviewer.net/
+// me apoyé también desde https://html.onlineviewer.net/ 
 
 const char PAGE_INDEX[] PROGMEM = R"rawliteral(
 <!doctype html>
@@ -79,6 +81,49 @@ header{height:40px;background:#010304;border-bottom:1px solid var(--g3);
 .pf{padding:6px;border-top:1px solid var(--g3);background:#030a07;
   display:flex;gap:4px;flex-wrap:wrap;flex-shrink:0}
 
+/* ── BT CONFIG ───────────────────────────────────── */
+.bt-config {
+  padding: 8px 10px;
+  border-bottom: 1px dashed var(--g3);
+  background: #020604;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 5px;
+}
+.bt-config p {
+  font-size: 9px;
+  color: var(--ink2);
+  line-height: 1.4;
+  margin: 0;
+}
+.bt-config span {
+  color: var(--c0);
+  font-weight: 700;
+  font-size: 10px;
+}
+#new-bt-name {
+  flex: 1;
+  background: #000;
+  color: var(--g0);
+  border: 1px solid var(--g2);
+  padding: 3px;
+  font-size: 9px;
+  font-family: inherit;
+  width: 60px;
+}
+.btn-small {
+  background: transparent;
+  border: 1px solid var(--y0);
+  color: var(--y0);
+  padding: 3px 5px;
+  font-size: 8px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.btn-small:hover { background: var(--y0); color: #000; }
+
 /* scroll */
 .scroll{flex:1;overflow-y:auto;padding:6px}
 .scroll::-webkit-scrollbar{width:3px}
@@ -149,22 +194,6 @@ header{height:40px;background:#010304;border-bottom:1px solid var(--g3);
 .pl-use{font-size:9px;padding:3px 6px;border:1px solid var(--g1);color:var(--g1);
   background:none;cursor:pointer;font-family:inherit;flex-shrink:0}
 .pl-use:hover{background:var(--g1);color:#000}
-
-/* ── STEP BUILDER ────────────────────────────────── */
-.step{display:flex;align-items:center;gap:6px;border:1px solid var(--g3);
-  padding:5px 7px;margin-bottom:3px;background:#000;
-  animation:fadeIn .2s ease both}
-.step-t{color:var(--c0);font-size:10px;min-width:56px;flex-shrink:0}
-.step input,.step select{flex:1;background:#000;color:var(--ink);
-  border:1px solid var(--g2);padding:3px 5px;font-family:inherit;font-size:11px}
-.step input:focus,.step select:focus{outline:none;border-color:var(--g0)}
-.kill{background:none;border:none;color:var(--r0);cursor:pointer;font-size:13px;flex-shrink:0}
-
-/* ── RAW EDITOR ──────────────────────────────────── */
-textarea.raw{flex:1;background:#000;color:var(--g0);border:none;
-  padding:10px;font-family:'JetBrains Mono',monospace;font-size:12px;
-  resize:none;outline:none;line-height:1.6}
-textarea.raw::selection{background:rgba(0,255,136,.2)}
 
 /* ── SD FILE LIST ────────────────────────────────── */
 .sd-bar{color:var(--ink2);font-size:10px;padding:6px 6px 4px;border-bottom:1px dashed var(--g3);margin-bottom:4px}
@@ -243,9 +272,7 @@ footer{height:30px;background:#010304;border-top:1px solid var(--g3);
     margin-bottom: 6px;
   }
 }
-
 </style>
-
 </head>
 <body>
 
@@ -259,15 +286,17 @@ footer{height:30px;background:#010304;border-top:1px solid var(--g3);
   </div>
 </header>
 
-<div class="bt-config">
-        <p>AirPods 3 de Juan </p>
-</div>
-
 <!-- MAIN -->
 <main class="wrap">
 
-  <!-- ── mostrar dispositivos Bluetooth a la izquierda ── -->
+  <!-- ── PANEL IZQUIERDO: SCAN Y CONFIG BT ── -->
   <div class="panel">
+    <div class="bt-config">
+        <p>VISIBLE:<br><span id="current-bt-name">AirPods 3 de Juan</span></p>
+        <!-- <input type="text" id="new-bt-name" placeholder="Nuevo nombre"> -->
+        <!-- <button class="btn-small" id="btn-change-name" onclick="updateBTName()">SAVE</button> -->
+    </div>
+
     <div class="ph">
       <span class="ph-title">BT SCAN</span>
       <span style="color:var(--ink2);font-size:10px" id="devCount">0 found</span>
@@ -281,23 +310,20 @@ footer{height:30px;background:#010304;border-top:1px solid var(--g3);
     </div>
   </div>
 
-    <!-- ── CENTER: PAYLOAD MANAGER ── -->
+  <!-- ── PANEL CENTRAL: PAYLOAD MANAGER ── -->
   <div class="panel">
     <div class="tabs">
       <button class="tab on" onclick="openTab('lib',this)">LIBRARY</button>
     </div>
 
     <div class="tab-wrap">
-
       <!-- Library -->
       <div class="tab-pane on" id="tab-lib">
         <div class="sd-bar">MICROSD ( / )</div>
         <div id="sdFileList" style="margin-bottom: 10px;"></div>
-
         <div class="scroll" id="libBody"></div>
       </div>
-
-    </div><!-- tab-wrap -->
+    </div>
 
     <!-- LAUNCH BAR -->
     <div class="launch-bar">
@@ -306,7 +332,7 @@ footer{height:30px;background:#010304;border-top:1px solid var(--g3);
     </div>
   </div>
 
-  <!-- ── RIGHT: CONSOLE ── -->
+  <!-- ── PANEL DERECHO: CONSOLA ── -->
   <div class="panel">
     <div class="ph">
       <span class="ph-title">CONSOLE</span>
@@ -346,20 +372,16 @@ footer{height:30px;background:#010304;border-top:1px solid var(--g3);
 
 <script>
 // ── DATA ────────────────────────────────────────────────────────────────
-// esto fue pruebita
-//const DEVICES = [
-//  {name:'iPhone de Fer',   mac:'A4:C3:F0:12:34:56', ico:'[M]', rssi:-58, vuln:true},
-//  {name:'LAPTOP-HP-8B2A', mac:'DC:A6:32:AB:CD:EF', ico:'[L]', rssi:-72, vuln:true},
-//  {name:'JBL Flip 6',     mac:'88:C6:26:11:22:33', ico:'[A]', rssi:-81, vuln:false},
-//  {name:'POCO X6 Pro',    mac:'E8:9F:6D:44:55:66', ico:'[M]', rssi:-65, vuln:true},
-//  {name:'MacBook Pro M3', mac:'3C:22:FB:77:88:99', ico:'[L]', rssi:-69, vuln:false},
-//];
 let DEVICES = [];
+
+const PAYLOADS = {
+};
 
 const CAT_CLR = {RECON:'#00d4ff',PERSIST:'#ffcc00',EXFIL:'#ff9933',SOCIAL:'#cc66ff'};
 
 let selectedDev = new Set();
 let activeId = null;
+let archivoSDSeleccionado = null;
 let matIv = null;
 
 // ── UTILS ────────────────────────────────────────────────────────────────
@@ -442,32 +464,24 @@ async function scanDevices(){
   log_('[BT] Solicitando dispositivos al ESP32...','sys');
   document.getElementById('devList').innerHTML='<div class="dev-scanning">[SCANNING...]</div>';
   
-  try
-  {
-    // hacerle la petición al ESP32
+  try {
     const response = await fetch('/api/devices');
     const data = await response.json();
-
-    // mapear los datos JSON a la estructura visual del HTML
     DEVICES = data.map(d => {
-      // icono según la compañía
       let icon = '[?]';
       if (d.company.includes('Apple')) icon = '[A]';
       else if (d.company.includes('Microsoft')) icon = '[W]';
       else if (d.company.includes('Google') || d.company.includes('Samsung')) icon = '[G]';
-
       return {
         name: d.name !== "Desconocido" ? d.name : d.company,
         mac: d.mac,
         ico: icon,
         rssi: d.rssi,
-        vuln: true // trabajo a futuro
+        vuln: true 
       };
     });
-
     renderDevices(DEVICES);
     log_(`[BT] ${DEVICES.length} dispositivos sincronizados desde la ESP32 ദ്ദി◝ ⩊ ◜)`,'ok');
-    
   } catch (error) {
     log_('[!] Error al conectar con ESP32: ' + error.message, 'err');
     document.getElementById('devList').innerHTML='<div class="dev-scanning" style="color:var(--r0)">[ERROR DE RED]</div>';
@@ -513,60 +527,24 @@ function renderLib(){
   });
 }
 
-// Variable global para rastrear el archivo elegido
-let archivoSDSeleccionado = null;
-
 function loadFromSD(name) {
   archivoSDSeleccionado = name;
-  
-  // Actualizamos el nombre en la barra de lanzamiento superior
+  activeId = null; 
   document.getElementById('activePayload').textContent = name;
-  
   log_(`[SD] Payload seleccionado para ataque: ${name}`, 'ok');
+  renderLib(); 
 }
 
-// Opcional: Si quieres mantener los payloads integrados (PAYLOADS) en la web,
-// actualizamos usePayload. Si los vas a borrar del todo, puedes ignorar esta función.
 function usePayload(id, cat, e) {
   if (e) { e.stopPropagation() }
   let found = null;
   Object.values(PAYLOADS).flat().forEach(p => { if (p.id === id) found = p });
   if (!found) return;
-  
-  // Como ya no hay editor RAW, simulamos que es un archivo más
-  archivoSDSeleccionado = "web_" + found.id; // Un identificador para el ESP32
+  activeId = id;
+  archivoSDSeleccionado = "web_" + found.id; 
   document.getElementById('activePayload').textContent = found.name;
-  
+  renderLib();
   log_(`Payload web cargado: [${cat}] ${found.name}`, 'ok');
-}
-
-function toRaw(){
-  const blocks=document.querySelectorAll('#stepsArea .step');
-  let r='';
-  blocks.forEach(b=>{
-    const t=b.querySelector('.step-t').textContent.replace(/[\[\]]/g,'');
-    const v=b.querySelector('input,select')?.value||'';
-    if(t==='WAIT')r+=`DELAY ${v}\n`;
-    else if(t==='STRING')r+=`STRING ${v}\n`;
-    else if(t==='KEY')r+=`${v}\n`;
-    else if(t==='REM')r+=`REM ${v}\n`;
-  });
-  document.getElementById('rawEd').value=r.trim();
-  openTab('raw',document.querySelectorAll('.tab')[2]);
-}
-
-function clearAll(){
-  document.getElementById('rawEd').value='';
-  document.getElementById('stepsArea').innerHTML='';
-  document.getElementById('activePayload').textContent='sin cargar';
-  activeId=null;renderLib();
-  log_('Editor limpiado','dim');
-}
-
-async function saveSD(){
-  log_('[SD] Guardando payload en MicroSD...','sys');
-  setTimeout(()=>log_('[SD] ✓ Guardado exitosamente','ok'),600);
-  // fetch('/api/save',{method:'POST',body:document.getElementById('rawEd').value})
 }
 
 function exportLog(){
@@ -579,16 +557,43 @@ function exportLog(){
 function clearLog(){document.getElementById('logPane').innerHTML=''}
 
 // ── LAUNCH & MATRIX ───────────────────────────────────────────────────────
-function launch(){
-  if(!selectedDev.size){log_('[!] Selecciona al menos un target','err');return}
-  const raw=document.getElementById('rawEd').value.trim();
-  if(!raw){log_('[!] No hay payload cargado — carga uno desde LIBRARY','err');return}
-  const names=[...selectedDev].map(i=>DEVICES[i].name).join(' | ');
-  log_(`[RUN] Iniciando inyección HID Bluetooth...`,'sys');
-  log_(`[RUN] Targets: ${names}`,'warn');
-  log_(`[BT] CVE-2023-45866 exploit enviando...`,'err');
-  showMatrix(names);
-  // fetch('/api/run',{method:'POST'})
+async function launch() {
+  if (selectedDev.size === 0) {
+    log_('[!] Selecciona al menos un target', 'err');
+    return;
+  }
+  if (!archivoSDSeleccionado) {
+    log_('[!] Selecciona un payload de la LIBRARY o SD primero', 'err');
+    return;
+  }
+
+  const macsArray = [...selectedDev].map(i => DEVICES[i].mac);
+  const macsString = macsArray.join(',');
+  const namesString = [...selectedDev].map(i => DEVICES[i].name).join(' | ');
+
+  log_(`[RUN] Iniciando inyección en ${macsArray.length} targets...`, 'sys');
+  log_(`[RUN] Archivo a ejecutar: ${archivoSDSeleccionado}`, 'warn');
+
+  try {
+    const params = new URLSearchParams();
+    params.append('macs', macsString);
+    params.append('file', archivoSDSeleccionado);
+
+    const response = await fetch('/api/run', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString()
+    });
+
+    if (response.ok) {
+      log_('[RUN] ESP32 recibió la lista. Ejecutando exploit...', 'ok');
+      showMatrix(namesString); 
+    } else {
+      log_('[!] Error en el ESP32 al procesar la petición', 'err');
+    }
+  } catch (error) {
+    log_('[!] Error de red: ' + error.message, 'err');
+  }
 }
 
 function showMatrix(targets){
@@ -622,9 +627,7 @@ function showMatrix(targets){
     }
     frame++;
     if(frame===30)tgt.classList.add('v');
-    //if(frame===70)h.classList.add('v');
-    if(frame===70){h.classList.add('v'); setTimeout(closeMatrix, 3000)} //cerrar despues de 3 segundos
-    //if(frame===110)sub.classList.add('v');
+    if(frame===70){h.classList.add('v'); setTimeout(closeMatrix, 3000)}
   },28);
 }
 
@@ -683,12 +686,11 @@ function showTutorial(){
     {t:'  El contador TARGETS: N aparece arriba.',type:'dim'},
     {t:'&nbsp;'},
     {t:'3: Cargar un payload',type:'ok'},
-    {t:'  LIBRARY > payloads predefinidos.',type:'info'},
+    {t:'  LIBRARY > payloads predefinidos o SD.',type:'info'},
     {t:'&nbsp;'},
     {t:'4: Lanzar',type:'ok'},
     {t:'  Presiona el boton rojo [LANZAR].',type:'warn'},
     {t:'  El payload se inyecta via Bluetooth HID.',type:'warn'},
-    {t:'escribe --help para ver todos los comandos.',type:'dim'},
   ];
   pasos.forEach((p,i)=>setTimeout(()=>log_(p.t||'&nbsp;',p.type||'dim'),i*55));
 }
@@ -698,8 +700,35 @@ function showStatus(){
   log_('BT        : ACTIVO','ok');
   log_('SD        : MONTADA','ok');
   log_(`Targets   : ${selectedDev.size} seleccionados`,selectedDev.size?'warn':'dim');
-  log_(`Payload   : ${document.getElementById('activePayload').textContent}`,activeId?'ok':'dim');
+  log_(`Payload   : ${document.getElementById('activePayload').textContent}`,archivoSDSeleccionado?'ok':'dim');
   log_('Exploit   : CVE-2023-45866 HID Injection','warn');
+}
+
+function updateBTName() {
+  var nuevoNombre = document.getElementById('new-bt-name').value;
+  if(nuevoNombre.trim() === "") {
+    alert("Por favor ingresa un nombre.");
+    return;
+  }
+  var btn = document.getElementById('btn-change-name');
+  btn.innerText = "WAIT";
+  btn.disabled = true;
+
+  fetch('/cambiar_ble?nombre=' + encodeURIComponent(nuevoNombre))
+    .then(response => response.text())
+    .then(data => {
+      document.getElementById('current-bt-name').innerText = nuevoNombre;
+      document.getElementById('new-bt-name').value = ""; 
+      btn.innerText = "SAVE";
+      btn.disabled = false;
+      log_(`[BT] Nombre visible cambiado a: ${nuevoNombre}`, 'warn');
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      btn.innerText = "SAVE";
+      btn.disabled = false;
+      log_('[!] Error al cambiar el nombre Bluetooth', 'err');
+    });
 }
 
 // ── INIT ──────────────────────────────────────────────────────────────────
@@ -734,15 +763,12 @@ async function cargarDirectorioSD() {
       log_('[SD] Error: ' + archivos.error, 'err');
       return;
     }
-
-    // Obtener el contenedor de la lista de archivos (necesitarás ponerle un id="sdFileList" a ese div en tu HTML)
     const contenedor = document.getElementById('sdFileList');
     contenedor.innerHTML = ''; 
 
     archivos.forEach(file => {
       const div = document.createElement('div');
       div.className = 'file';
-      // Pasamos el nombre del archivo a la función que ya tienes para cargar el contenido
       div.onclick = () => loadFromSD(file.name); 
       div.innerHTML = `
         <span class="file-ico">[F]</span>
@@ -751,48 +777,11 @@ async function cargarDirectorioSD() {
       `;
       contenedor.appendChild(div);
     });
-
     log_(`[SD] ${archivos.length} archivos cargados del directorio`, 'ok');
   } catch (error) {
-    log_('[!] Error al leer la SD desde la web', 'err');
+    log_('[!] Esperando lectura de MicroSD ( /api/sd/list )...', 'dim');
   }
 }
-
-// Asumiendo que selectedDev tiene los índices de los dispositivos seleccionados
-// async function launch() {
-//   if (selectedDev.size === 0) {
-//     log_('[!] Selecciona al menos un target', 'err');
-//     return;
-//   }
-
-//   // 1. Extraemos TODAS las MACs seleccionadas y las unimos con comas
-//   // Resultado esperado: "A4:C3:F0...,DC:A6:32...,88:C6:26..."
-//   const macsArray = [...selectedDev].map(i => DEVICES[i].mac);
-//   const macsString = macsArray.join(',');
-//   const namesString = [...selectedDev].map(i => DEVICES[i].name).join(' | ');
-
-//   log_(`[RUN] Iniciando inyección en ${macsArray.length} targets...`, 'sys');
-
-//   try {
-//     const response = await fetch('/api/run', {
-//       method: 'POST',
-//       headers: {
-//         'Content-Type': 'application/x-www-form-urlencoded',
-//       },
-//       // 2. Enviamos el string unificado bajo la llave "macs"
-//       body: 'macs=' + encodeURIComponent(macsString)
-//     });
-
-//     if (response.ok) {
-//       log_('[RUN] ESP32 recibió la lista. Ejecutando exploit múltiple...', 'ok');
-//       showMatrix(namesString); 
-//     } else {
-//       log_('[!] Error en el ESP32 al procesar la petición', 'err');
-//     }
-//   } catch (error) {
-//     log_('[!] Error de red: ' + error.message, 'err');
-//   }
-// }
 </script>
 </body>
 </html>
