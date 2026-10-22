@@ -25,8 +25,8 @@ NimBLEScan* pBLEScan;
 typedef struct bluetooth_capture {
   esp_bd_addr_t MAC;
   int RSSI;
-  const char *name;
-  const char *companyName;
+  String name;
+  String companyName;
 } BT_CAPTURE;
 
 // aqui se almacenan los dispositivos capturados por Bluetooth, todos diferentes
@@ -63,18 +63,18 @@ class MyScanCallbacks: public NimBLEScanCallbacks {
     Serial.print(advertisedDevice->getRSSI());
     Serial.print(" dBm");
 
-    
-    const char* deviceName = NULL;
+    String deviceName = "Desconocido";
+    String companyName = "Desconocida";
 
     // mostrar nombre si lo tiene disponible
-    if (advertisedDevice->haveName()) {
+    if (advertisedDevice->haveName())
+    {
+      deviceName = String(advertisedDevice->getName().c_str());
       Serial.print(" | Name: ");
-      Serial.print(advertisedDevice->getName().c_str());
-      deviceName = advertisedDevice->getName().c_str();
+      Serial.print(deviceName);
     }
 
-    const char* companyName = NULL;
-
+    // obtener compañía
     // intentar saber le sistema operativo por el Manufacturer Data
     if(advertisedDevice->haveManufacturerData())
     {
@@ -85,34 +85,18 @@ class MyScanCallbacks: public NimBLEScanCallbacks {
       {
         uint16_t companyID=(uint8_t)mData[1]<<8 | (uint8_t)mData[0];
 
-        Serial.print(" | Tipo estimado: ");
+        Serial.print(" | Tipo: ");
         switch(companyID) {
-          case 0x004C: // Apple Inc.
-            Serial.print("Apple (iPhone/iPad/Mac/AirPods)");
-            companyName = "Apple (iPhone/iPad/Mac/AirPods)";
-            break;
-          case 0x0006: // Microsoft
-            Serial.print("Windows / Microsoft");
-            companyName = "Windows / Microsoft";
-            break;
-          case 0x00E0: // Google Inc.
-          case 0x055D:
-            Serial.print("Android / Google / Chromecast");
-            companyName = "Android / Google / Chromecast";
-            break;
-          case 0x0075: // Samsung Electronics
-            Serial.print("Samsung (Android)");
-            companyName = "Samsung (Android)";
-            break;
-          case 0x012D: // Sony
-            Serial.print("Sony Device");
-            companyName = "Sony Device";
-            break;
-          default:
-            Serial.printf("Desconocido (ID: 0x%04X)", companyID);
-            companyName = NULL;
-            break;
+          case 0x004C: companyName = "Apple"; break;
+          case 0x0006: companyName = "Microsoft"; break;
+          case 0x00E0: 
+          case 0x055D: companyName = "Google/Android"; break;
+          case 0x0075: companyName = "Samsung"; break;
+          case 0x012D: companyName = "Sony"; break;
+          default:     companyName = "Otro"; break;
         }
+        Serial.print(companyName);
+
       }
     }
     Serial.println();
@@ -122,7 +106,6 @@ class MyScanCallbacks: public NimBLEScanCallbacks {
     parseMACString(advertisedDevice->getAddress().toString(), macConvertida);
 
     bluetooth_capture nuevoDispositivo;
-
     memcpy(nuevoDispositivo.MAC, macConvertida, 6);
     //nuevoDispositivo.MAC = (_desp_bd_addr_t) macConvertida;
     nuevoDispositivo.RSSI = advertisedDevice->getRSSI();
@@ -135,12 +118,20 @@ class MyScanCallbacks: public NimBLEScanCallbacks {
       Serial.printf("%2x", nuevoDispositivo.MAC[i]);
     }
     Serial.println("}");
-    Serial.printf(" %d %s %s", nuevoDispositivo.RSSI,
-                  nuevoDispositivo.name, nuevoDispositivo.companyName);
+    //Serial.printf(" %d %s %s", nuevoDispositivo.RSSI,
+    //              nuevoDispositivo.name, nuevoDispositivo.companyName);
 
     // se inserta el dispositivo encontrado para que se muestre en el sitio web
+    //dispositivosDetectados.push_back(nuevoDispositivo);
+    //Serial.println("1");
+    
+    Serial.printf(" %d %s %s\n", 
+                  nuevoDispositivo.RSSI, 
+                  nuevoDispositivo.name.c_str(), 
+                  nuevoDispositivo.companyName.c_str());
+
+    // Se inserta en el vector global
     dispositivosDetectados.push_back(nuevoDispositivo);
-    Serial.println("1");
   }
 };
 
