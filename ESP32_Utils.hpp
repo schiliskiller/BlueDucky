@@ -64,7 +64,7 @@ class MyScanCallbacks: public NimBLEScanCallbacks {
     Serial.print(" dBm");
 
     
-    const char* deviceName;
+    const char* deviceName = NULL;
 
     // mostrar nombre si lo tiene disponible
     if (advertisedDevice->haveName()) {
@@ -73,7 +73,7 @@ class MyScanCallbacks: public NimBLEScanCallbacks {
       deviceName = advertisedDevice->getName().c_str();
     }
 
-    const char* companyName;
+    const char* companyName = NULL;
 
     // intentar saber le sistema operativo por el Manufacturer Data
     if(advertisedDevice->haveManufacturerData())
