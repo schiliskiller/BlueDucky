@@ -106,8 +106,8 @@ class MyScanCallbacks: public NimBLEScanCallbacks {
     parseMACString(advertisedDevice->getAddress().toString(), macConvertida);
 
     bluetooth_capture nuevoDispositivo;
+
     memcpy(nuevoDispositivo.MAC, macConvertida, 6);
-    //nuevoDispositivo.MAC = (_desp_bd_addr_t) macConvertida;
     nuevoDispositivo.RSSI = advertisedDevice->getRSSI();
     nuevoDispositivo.name = deviceName;
     nuevoDispositivo.companyName = companyName;
@@ -115,9 +115,9 @@ class MyScanCallbacks: public NimBLEScanCallbacks {
     Serial.print("{");
     for (int i = 0; i < 6; i++)
     {
-      Serial.printf("%2x", nuevoDispositivo.MAC[i]);
+      Serial.printf("%2x ", nuevoDispositivo.MAC[i]);
     }
-    Serial.println("}");
+    Serial.print("}");
     //Serial.printf(" %d %s %s", nuevoDispositivo.RSSI,
     //              nuevoDispositivo.name, nuevoDispositivo.companyName);
 

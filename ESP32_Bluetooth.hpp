@@ -1,8 +1,8 @@
 #include <Arduino.h>
-#include "esp_bt.h"
+#include <esp_bt.h>
 #include "esp_bt_main.h"
 #include "esp_bt_device.h"
-#include "esp_l2cap_api.h"
+#include "esp_l2cap_bt_api.h"
 #include "esp_sdp_api.h"
 #include "esp_gap_bt_api.h"
 #include "esp_hidd_api.h"
@@ -50,4 +50,15 @@ void initBluetoothStack()
     // 4. Registrar Callback de L2CAP e inicializarlo
     esp_bt_l2cap_register_callback(l2cap_callback);
     esp_bt_l2cap_init();
+
+    // tipo de pin
+    esp_bt_pin_type_t pin_type = ESP_BT_PIN_TYPE_VARIABLE;
+    esp_bt_gap_set_pin_type(pin_type); //elige el tipo de pin
+
+    // emparejamiento "Just Works"
+    esp_bt_io_cap_t iocap = ESP_BT_IO_CAP_NONE; 
+    
+    // se establecen los parametros de seguridad para el emparejamiento
+    esp_bt_gap_set_security_param(ESP_BT_SP_IOCAP_MODE, &iocap, sizeof(esp_bt_io_cap_t));
 }
+

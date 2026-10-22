@@ -836,6 +836,39 @@ const WELCOME=[
   {t:'Ducky listo ദ്ദി◝ ⩊ ◜)  ¡A jugar!',type:'sys',d:1420},
 ];
 WELCOME.forEach(m=>setTimeout(()=>log_(m.t,m.type),m.d));
+
+async function cargarDirectorioSD() {
+  try {
+    const response = await fetch('/api/sd/list');
+    const archivos = await response.json();
+    
+    if (archivos.error) {
+      log_('[SD] Error: ' + archivos.error, 'err');
+      return;
+    }
+
+    // Obtener el contenedor de la lista de archivos (necesitarás ponerle un id="sdFileList" a ese div en tu HTML)
+    const contenedor = document.getElementById('sdFileList');
+    contenedor.innerHTML = ''; 
+
+    archivos.forEach(file => {
+      const div = document.createElement('div');
+      div.className = 'file';
+      // Pasamos el nombre del archivo a la función que ya tienes para cargar el contenido
+      div.onclick = () => loadFromSD(file.name); 
+      div.innerHTML = `
+        <span class="file-ico">[F]</span>
+        <span class="file-nm">${file.name}</span>
+        <span class="file-sz">${file.size}</span>
+      `;
+      contenedor.appendChild(div);
+    });
+
+    log_(`[SD] ${archivos.length} archivos cargados del directorio`, 'ok');
+  } catch (error) {
+    log_('[!] Error al leer la SD desde la web', 'err');
+  }
+}
 </script>
 </body>
 </html>
