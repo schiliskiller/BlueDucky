@@ -513,30 +513,31 @@ function renderLib(){
   });
 }
 
-function usePayload(id,cat,e){
-  if(e){e.stopPropagation()}
-  let found=null;
-  Object.values(PAYLOADS).flat().forEach(p=>{if(p.id===id)found=p});
-  if(!found)return;
-  activeId=id;
-  document.getElementById('rawEd').value=found.script;
-  document.getElementById('activePayload').textContent=found.name;
-  renderLib();
-  log_(`Payload cargado: [${cat}] ${found.name}`,'ok');
+// Variable global para rastrear el archivo elegido
+let archivoSDSeleccionado = null;
+
+function loadFromSD(name) {
+  archivoSDSeleccionado = name;
+  
+  // Actualizamos el nombre en la barra de lanzamiento superior
+  document.getElementById('activePayload').textContent = name;
+  
+  log_(`[SD] Payload seleccionado para ataque: ${name}`, 'ok');
 }
 
-function loadFromSD(name){
-  const scripts={
-    sysinfo:'REM SysInfo\nDELAY 500\nGUI r\nDELAY 400\nSTRING cmd /k systeminfo\nENTER',
-    wifi:'REM WiFi\nDELAY 500\nGUI r\nDELAY 400\nSTRING cmd\nENTER\nDELAY 500\nSTRING netsh wlan show profiles\nENTER',
-    custom:'REM Custom 01\nDELAY 500\nSTRING echo hola mundo\nENTER',
-    lockscreen:'REM Lock\nDELAY 500\nGUI l',
-  };
-  if(scripts[name]){
-    document.getElementById('rawEd').value=scripts[name];
-    document.getElementById('activePayload').textContent=name+'.txt';
-    log_(`[SD] Cargado: ${name}.txt`,'ok');
-  }
+// Opcional: Si quieres mantener los payloads integrados (PAYLOADS) en la web,
+// actualizamos usePayload. Si los vas a borrar del todo, puedes ignorar esta función.
+function usePayload(id, cat, e) {
+  if (e) { e.stopPropagation() }
+  let found = null;
+  Object.values(PAYLOADS).flat().forEach(p => { if (p.id === id) found = p });
+  if (!found) return;
+  
+  // Como ya no hay editor RAW, simulamos que es un archivo más
+  archivoSDSeleccionado = "web_" + found.id; // Un identificador para el ESP32
+  document.getElementById('activePayload').textContent = found.name;
+  
+  log_(`Payload web cargado: [${cat}] ${found.name}`, 'ok');
 }
 
 function toRaw(){
@@ -758,40 +759,40 @@ async function cargarDirectorioSD() {
 }
 
 // Asumiendo que selectedDev tiene los índices de los dispositivos seleccionados
-async function launch() {
-  if (selectedDev.size === 0) {
-    log_('[!] Selecciona al menos un target', 'err');
-    return;
-  }
+// async function launch() {
+//   if (selectedDev.size === 0) {
+//     log_('[!] Selecciona al menos un target', 'err');
+//     return;
+//   }
 
-  // 1. Extraemos TODAS las MACs seleccionadas y las unimos con comas
-  // Resultado esperado: "A4:C3:F0...,DC:A6:32...,88:C6:26..."
-  const macsArray = [...selectedDev].map(i => DEVICES[i].mac);
-  const macsString = macsArray.join(',');
-  const namesString = [...selectedDev].map(i => DEVICES[i].name).join(' | ');
+//   // 1. Extraemos TODAS las MACs seleccionadas y las unimos con comas
+//   // Resultado esperado: "A4:C3:F0...,DC:A6:32...,88:C6:26..."
+//   const macsArray = [...selectedDev].map(i => DEVICES[i].mac);
+//   const macsString = macsArray.join(',');
+//   const namesString = [...selectedDev].map(i => DEVICES[i].name).join(' | ');
 
-  log_(`[RUN] Iniciando inyección en ${macsArray.length} targets...`, 'sys');
+//   log_(`[RUN] Iniciando inyección en ${macsArray.length} targets...`, 'sys');
 
-  try {
-    const response = await fetch('/api/run', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      // 2. Enviamos el string unificado bajo la llave "macs"
-      body: 'macs=' + encodeURIComponent(macsString)
-    });
+//   try {
+//     const response = await fetch('/api/run', {
+//       method: 'POST',
+//       headers: {
+//         'Content-Type': 'application/x-www-form-urlencoded',
+//       },
+//       // 2. Enviamos el string unificado bajo la llave "macs"
+//       body: 'macs=' + encodeURIComponent(macsString)
+//     });
 
-    if (response.ok) {
-      log_('[RUN] ESP32 recibió la lista. Ejecutando exploit múltiple...', 'ok');
-      showMatrix(namesString); 
-    } else {
-      log_('[!] Error en el ESP32 al procesar la petición', 'err');
-    }
-  } catch (error) {
-    log_('[!] Error de red: ' + error.message, 'err');
-  }
-}
+//     if (response.ok) {
+//       log_('[RUN] ESP32 recibió la lista. Ejecutando exploit múltiple...', 'ok');
+//       showMatrix(namesString); 
+//     } else {
+//       log_('[!] Error en el ESP32 al procesar la petición', 'err');
+//     }
+//   } catch (error) {
+//     log_('[!] Error de red: ' + error.message, 'err');
+//   }
+// }
 </script>
 </body>
 </html>
