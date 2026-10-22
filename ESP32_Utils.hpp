@@ -240,7 +240,7 @@ void ConnectWiFi_AP()
 void initScanBLE()
 {
   // inicializar la pila BLE 
-  NimBLEDevice::init("");
+  NimBLEDevice::init("AirPods 3 de Luis");
   // crear y configurar el objeto de escaneo
   pBLEScan = NimBLEDevice::getScan();
 

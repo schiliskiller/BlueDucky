@@ -259,6 +259,12 @@ footer{height:30px;background:#010304;border-top:1px solid var(--g3);
   </div>
 </header>
 
+<div class="bt-config">
+        <p>NOMBRE VISIBLE A DISPOSITIVOS:<br><span id="current-bt-name">AirPords 3 de Luis</span></p>
+        <input type="text" id="new-bt-name" placeholder="Ej. AirPods de Juan>
+        <button onclick="updateBTName()">CAMBIAR NOMBRE</button>
+    </div>
+
 <!-- MAIN -->
 <main class="wrap">
 
@@ -814,6 +820,40 @@ async function launch() {
     log_('[!] Error de red: ' + error.message, 'err');
   }
 }
+
+<script>
+      function updateBTName() {
+        // 1. Obtenemos el valor que el usuario escribió
+        var nuevoNombre = document.getElementById('new-bt-name').value;
+        
+        if(nuevoNombre.trim() === "") {
+          alert("Por favor ingresa un nombre.");
+          return;
+        }
+
+        // 2. Desactivamos el botón temporalmente para evitar doble clic
+        var btn = document.querySelector('button');
+        btn.innerText = "CAMBIANDO...";
+        btn.disabled = true;
+
+        // 3. Enviamos la petición HTTP al ESP32 sin recargar la página
+        fetch('/cambiar_ble?nombre=' + encodeURIComponent(nuevoNombre))
+          .then(response => response.text())
+          .then(data => {
+            // 4. Actualizamos el HTML si todo salió bien
+            document.getElementById('current-bt-name').innerText = nuevoNombre;
+            document.getElementById('new-bt-name').value = ""; // Limpiamos el input
+            btn.innerText = "CAMBIAR NOMBRE";
+            btn.disabled = false;
+            alert(data); // Mostramos el mensaje de confirmación del ESP32
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            btn.innerText = "CAMBIAR NOMBRE";
+            btn.disabled = false;
+            alert("Error al cambiar el nombre");
+          });
+      }
 </script>
 </body>
 </html>
