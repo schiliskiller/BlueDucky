@@ -17,7 +17,7 @@
 int scanTime = 5;
 NimBLEScan* pBLEScan;
 String osObjetivo = "Ninguno";
-extern char ssid_blueducky[64];
+//extern char ssid_blueducky[64];
 
 typedef struct bluetooth_capture {
   uint8_t* MAC;
@@ -235,7 +235,13 @@ void ConnectWiFi_AP()
 void initScanBLE()
 {
   // inicializar la pila BLE 
-  NimBLEDevice::init("AirPods 3 de Luis");
+  NimBLEDevice::init("AirPods 3 de Juan");
+
+  NimBLEServer *pServer = NimBLEDevice::createServer();
+  NimBLEAdvertising *pAdvertising = NimBLEDevice::getAdvertising();
+  pAdvertising->setName("AirPods 3 de Juan"); 
+  pAdvertising->start();
+
   // crear y configurar el objeto de escaneo
   pBLEScan = NimBLEDevice::getScan();
 
