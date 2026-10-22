@@ -3,23 +3,24 @@
 
 // no se utilizó IA en este código jejeje
 
-#include "lista_proveedores.hpp"
-#include <string.h>
 #include <NimBLEDevice.h>
-
+#include <string.h>
 #include <string>
 #include <vector>
 #include <FS.h>
 #include <SD.h>
 #include <SPI.h>
+#include "lista_proveedores.hpp"
 
 // https://zbotic.in/esp32-ble-scanner-detect-nearby-devices-signal-strength/
 
 int scanTime = 5;
 NimBLEScan* pBLEScan;
+String osObjetivo = "Ninguno";
+extern char ssid_blueducky[64];
 
 typedef struct bluetooth_capture {
-  esp_bd_addr_t MAC;
+  uint8_t* MAC;
   int RSSI;
   String name;
   String companyName;
@@ -114,12 +115,6 @@ class MyScanCallbacks: public NimBLEScanCallbacks {
       Serial.printf("%2x ", nuevoDispositivo.MAC[i]);
     }
     Serial.print("}");
-    //Serial.printf(" %d %s %s", nuevoDispositivo.RSSI,
-    //              nuevoDispositivo.name, nuevoDispositivo.companyName);
-
-    // se inserta el dispositivo encontrado para que se muestre en el sitio web
-    //dispositivosDetectados.push_back(nuevoDispositivo);
-    //Serial.println("1");
 
     Serial.printf(" %d %s %s\n", 
                   nuevoDispositivo.RSSI, 
@@ -224,7 +219,7 @@ void ConnectWiFi_AP()
   Serial.println("");
   WiFi.mode(WIFI_AP);
 
-  while(!WiFi.softAP(ssid, passw))
+  while(!WiFi.softAP(ssid_blueducky, passw))
   {
     Serial.println(".");
     delay(100);
@@ -232,7 +227,7 @@ void ConnectWiFi_AP()
 
   Serial.println("");
   Serial.print("Iniciando AP:\t");
-  Serial.println(ssid);
+  Serial.println(ssid_blueducky);
   Serial.print("Direccion IP:\t");
   Serial.println(WiFi.softAPIP());
 }
@@ -280,7 +275,7 @@ void scanBLE()
 }
 
 void setupBLESecurity() {
-    NimBLEDevice::init("BlueDucky_Manager");
+    //NimBLEDevice::init("BlueDucky_Manager");
 
     // Configurar el tipo de autenticación
     // false = No requiere MITM (Man In The Middle protection) -> Usa "Just Works"
@@ -291,6 +286,24 @@ void setupBLESecurity() {
     // BLE_HS_IO_NO_INPUT_OUTPUT = El ESP32 no tiene pantalla ni teclado. 
     // Esto fuerza a que la mayoría de los teléfonos usen "Just Works" (Solo un botón de Aceptar).
     NimBLEDevice::setSecurityIOCap(BLE_HS_IO_NO_INPUT_OUTPUT);
+}
+
+// Asumiendo que selectedDev tiene los índices de los dispositivos seleccionados
+String detectarOS(NimBLEClient* pClient) {
+  // 1. Buscar el servicio exclusivo de Apple (ANCS)
+  NimBLEUUID ancsUUID("7905F431-B5CE-4E99-A40F-4B1E122D00D0");
+  if (pClient->getService(ancsUUID) != nullptr) {
+      return "Apple";
+  }
+
+  // 2. Buscar el servicio Fast Pair de Google/Android
+  NimBLEUUID fastPairUUID((uint16_t)0xFE2C);
+  if (pClient->getService(fastPairUUID) != nullptr) {
+      return "Android";
+  }
+
+  // 4. Si no tiene servicios exclusivos y no coincide el nombre
+  return "Linux";
 }
 
 bool conectarYEmparejar(NimBLEAddress direccionObjetivo) {
@@ -310,11 +323,15 @@ bool conectarYEmparejar(NimBLEAddress direccionObjetivo) {
     // 2. Iniciar la negociación de seguridad (Pairing)
     if (pClient->secureConnection()) {
         Serial.println("¡Emparejamiento exitoso! Las llaves se han guardado.");
+
+        osObjetivo = detectarOS(pClient);
+        Serial.printf("[Ducky dice]: Objetivo fijado -> %s\n", osObjetivo.c_str());
+
         // Aquí ya puedes leer/escribir características que requieran autenticación
         return true;
-    } else {
-        Serial.println("El dispositivo rechazó el emparejamiento o hubo un error (Timeout).");
-        pClient->disconnect();
-        return false;
     }
+
+    Serial.println("El dispositivo rechazó el emparejamiento o hubo un error (Timeout).");
+    pClient->disconnect();
+    return false;
 }

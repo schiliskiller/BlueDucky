@@ -287,6 +287,9 @@ footer{height:30px;background:#010304;border-top:1px solid var(--g3);
 
       <!-- Library -->
       <div class="tab-pane on" id="tab-lib">
+        <div class="sd-bar">MICROSD ( / )</div>
+        <div id="sdFileList" style="margin-bottom: 10px;"></div>
+
         <div class="scroll" id="libBody"></div>
       </div>
 
@@ -543,22 +546,25 @@ function usePayload(id,cat,e){
   activeId=id;
   document.getElementById('rawEd').value=found.script;
   document.getElementById('activePayload').textContent=found.name;
-  renderLib();}
+  renderLib();
   log_(`Payload cargado: [${cat}] ${found.name}`,'ok');
 }
 
+// Agrega esta variable global junto a let activeId = null;
+let archivoSDSeleccionado = null;
+
 function loadFromSD(name){
-  const scripts={
-    sysinfo:'REM SysInfo\nDELAY 500\nGUI r\nDELAY 400\nSTRING cmd /k systeminfo\nENTER',
-    wifi:'REM WiFi\nDELAY 500\nGUI r\nDELAY 400\nSTRING cmd\nENTER\nDELAY 500\nSTRING netsh wlan show profiles\nENTER',
-    custom:'REM Custom 01\nDELAY 500\nSTRING echo hola mundo\nENTER',
-    lockscreen:'REM Lock\nDELAY 500\nGUI l',
-  };
-  if(scripts[name]){
-    document.getElementById('rawEd').value=scripts[name];
-    document.getElementById('activePayload').textContent=name+'.txt';
-    log_(`[SD] Cargado: ${name}.txt`,'ok');
-  }
+  archivoSDSeleccionado = name;
+  activeId = null; // Deseleccionamos los scripts locales de la web
+  
+  // Actualizamos la barra de arriba
+  document.getElementById('activePayload').textContent = name;
+  
+  // Mostramos un aviso en el editor
+  document.getElementById('rawEd').value = "// Archivo seleccionado desde la MicroSD:\n// " + name + "\n\n// Al presionar LANZAR, el ESP32 leerá e inyectará\n// el DuckyScript directamente desde la tarjeta.";
+  
+  log_(`[SD] Payload seleccionado para ataque: ${name}`, 'ok');
+  renderLib(); // Refresca la lista visualmente
 }
 
 function toRaw(){
@@ -574,6 +580,39 @@ function toRaw(){
   });
   document.getElementById('rawEd').value=r.trim();
   openTab('raw',document.querySelectorAll('.tab')[2]);
+}
+
+function launch() {
+  // 1. Validaciones
+  if (!selectedDev.size) { 
+    log_('[!] Selecciona al menos un target', 'err'); 
+    return; 
+  }
+  if (!archivoSDSeleccionado) { 
+    log_('[!] Selecciona un payload de la LIBRARY primero', 'err'); 
+    return; 
+  }
+  
+  // 2. Extraer datos visuales para la consola
+  const names = [...selectedDev].map(i => DEVICES[i].name).join(' | ');
+  const macs = [...selectedDev].map(i => DEVICES[i].mac).join(',');
+  
+  log_(`[RUN] Preparando inyección HID Bluetooth...`, 'sys');
+  log_(`[RUN] Targets: ${names}`, 'warn');
+  log_(`[RUN] Archivo a ejecutar: ${archivoSDSeleccionado}`, 'warn');
+  
+  showMatrix(names);
+
+  // 3. Preparar y enviar la petición POST al ESP32
+  const params = new URLSearchParams();
+  params.append('macs', macs);
+  params.append('file', archivoSDSeleccionado);
+
+  fetch('/api/run', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params.toString()
+  }).catch(e => log_('[!] Error de conexión con el ESP32: ' + e, 'err'));
 }
 
 function clearAll(){
@@ -727,6 +766,7 @@ function showStatus(){
 // ── INIT ──────────────────────────────────────────────────────────────────
 renderDevices(DEVICES);
 renderLib();
+cargarDirectorioSD();
 
 const WELCOME=[
   {t:'¡Te damos la bienvenida a BlueDucky ദ്ദി◝ ⩊ ◜)!',type:'sys',d:320},
@@ -779,41 +819,6 @@ async function cargarDirectorioSD() {
   }
 }
 
-// Asumiendo que selectedDev tiene los índices de los dispositivos seleccionados
-async function launch() {
-  if (selectedDev.size === 0) {
-    log_('[!] Selecciona al menos un target', 'err');
-    return;
-  }
-
-  // 1. Extraemos TODAS las MACs seleccionadas y las unimos con comas
-  // Resultado esperado: "A4:C3:F0...,DC:A6:32...,88:C6:26..."
-  const macsArray = [...selectedDev].map(i => DEVICES[i].mac);
-  const macsString = macsArray.join(',');
-  const namesString = [...selectedDev].map(i => DEVICES[i].name).join(' | ');
-
-  log_(`[RUN] Iniciando inyección en ${macsArray.length} targets...`, 'sys');
-
-  try {
-    const response = await fetch('/api/run', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      // 2. Enviamos el string unificado bajo la llave "macs"
-      body: 'macs=' + encodeURIComponent(macsString)
-    });
-
-    if (response.ok) {
-      log_('[RUN] ESP32 recibió la lista. Ejecutando exploit múltiple...', 'ok');
-      showMatrix(namesString); 
-    } else {
-      log_('[!] Error en el ESP32 al procesar la petición', 'err');
-    }
-  } catch (error) {
-    log_('[!] Error de red: ' + error.message, 'err');
-  }
-}
 </script>
 </body>
 </html>
