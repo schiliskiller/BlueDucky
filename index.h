@@ -392,13 +392,15 @@ ENTER</textarea>
 
 <script>
 // ── DATA ────────────────────────────────────────────────────────────────
-const DEVICES = [
-  {name:'iPhone de Fer',   mac:'A4:C3:F0:12:34:56', ico:'[M]', rssi:-58, vuln:true},
-  {name:'LAPTOP-HP-8B2A', mac:'DC:A6:32:AB:CD:EF', ico:'[L]', rssi:-72, vuln:true},
-  {name:'JBL Flip 6',     mac:'88:C6:26:11:22:33', ico:'[A]', rssi:-81, vuln:false},
-  {name:'POCO X6 Pro',    mac:'E8:9F:6D:44:55:66', ico:'[M]', rssi:-65, vuln:true},
-  {name:'MacBook Pro M3', mac:'3C:22:FB:77:88:99', ico:'[L]', rssi:-69, vuln:false},
-];
+// esto fue pruebita
+//const DEVICES = [
+//  {name:'iPhone de Fer',   mac:'A4:C3:F0:12:34:56', ico:'[M]', rssi:-58, vuln:true},
+//  {name:'LAPTOP-HP-8B2A', mac:'DC:A6:32:AB:CD:EF', ico:'[L]', rssi:-72, vuln:true},
+//  {name:'JBL Flip 6',     mac:'88:C6:26:11:22:33', ico:'[A]', rssi:-81, vuln:false},
+//  {name:'POCO X6 Pro',    mac:'E8:9F:6D:44:55:66', ico:'[M]', rssi:-65, vuln:true},
+//  {name:'MacBook Pro M3', mac:'3C:22:FB:77:88:99', ico:'[L]', rssi:-69, vuln:false},
+//];
+let DEVICES = [];
 
 const PAYLOADS = {
   RECON:[
@@ -511,14 +513,40 @@ function clearSel(){
   log_('Selección limpiada','dim');
 }
 
-function scanDevices(){
-  log_('[BT] Iniciando escaneo Bluetooth...','sys');
+async function scanDevices(){
+  log_('[BT] Solicitando dispositivos al ESP32...','sys');
   document.getElementById('devList').innerHTML='<div class="dev-scanning">[SCANNING...]</div>';
-  setTimeout(()=>{
-    const sh=[...DEVICES].sort(()=>Math.random()-.5);
-    renderDevices(sh);
-    log_(`[BT] ${sh.length} dispositivos encontrados`,'ok');
-  },1800);
+  
+  try
+  {
+    // hacerle la petición al ESP32
+    const response = await fetch('/api/devices');
+    const data = await response.json();
+
+    // mapear los datos JSON a la estructura visual del HTML
+    DEVICES = data.map(d => {
+      // icono según la compañía
+      let icon = '[?]';
+      if (d.company.includes('Apple')) icon = '[A]';
+      else if (d.company.includes('Microsoft')) icon = '[W]';
+      else if (d.company.includes('Google') || d.company.includes('Samsung')) icon = '[G]';
+
+      return {
+        name: d.name !== "Desconocido" ? d.name : d.company,
+        mac: d.mac,
+        ico: icon,
+        rssi: d.rssi,
+        vuln: true // trabajo a futuro
+      };
+    });
+
+    renderDevices(DEVICES);
+    log_(`[BT] ${DEVICES.length} dispositivos sincronizados desde la ESP32 ദ്ദി◝ ⩊ ◜)`,'ok');
+    
+  } catch (error) {
+    log_('[!] Error al conectar con ESP32: ' + error.message, 'err');
+    document.getElementById('devList').innerHTML='<div class="dev-scanning" style="color:var(--r0)">[ERROR DE RED]</div>';
+  }
 }
 
 function logDevices(){
