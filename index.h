@@ -281,9 +281,6 @@ footer{height:30px;background:#010304;border-top:1px solid var(--g3);
   <div class="panel">
     <div class="tabs">
       <button class="tab on" onclick="openTab('lib',this)">LIBRARY</button>
-      <button class="tab" onclick="openTab('bld',this)">BUILDER</button>
-      <button class="tab" onclick="openTab('raw',this)">RAW</button>
-      <button class="tab" onclick="openTab('sd',this)">SD CARD</button>
     </div>
 
     <div class="tab-wrap">
@@ -291,56 +288,6 @@ footer{height:30px;background:#010304;border-top:1px solid var(--g3);
       <!-- Library -->
       <div class="tab-pane on" id="tab-lib">
         <div class="scroll" id="libBody"></div>
-      </div>
-
-      <!-- Builder -->
-      <div class="tab-pane" id="tab-bld">
-        <div class="scroll" id="stepsArea"></div>
-        <div class="pf">
-          <button class="btn" onclick="addStep('WAIT')">+WAIT</button>
-          <button class="btn" onclick="addStep('STRING')">+STRING</button>
-          <button class="btn" onclick="addStep('KEY')">+KEY</button>
-          <button class="btn" onclick="addStep('REM')">+REM</button>
-          <button class="btn b" onclick="toRaw()">→ RAW</button>
-          <button class="btn a" onclick="saveSD()">SAVE SD</button>
-        </div>
-      </div>
-
-      <!-- Raw -->
-      <div class="tab-pane" id="tab-raw">
-        <textarea class="raw" id="rawEd" spellcheck="false">REM BlueDucky Payload
-DELAY 500
-GUI r
-DELAY 400
-STRING cmd
-ENTER
-DELAY 500
-STRING echo BlueDucky Connected
-ENTER</textarea>
-        <div class="pf">
-          <button class="btn" onclick="toBuilder()">→ BUILDER</button>
-          <button class="btn a" onclick="saveSD()">SAVE SD</button>
-          <button class="btn d" onclick="clearAll()">CLEAR</button>
-        </div>
-      </div>
-
-      <!-- SD Card -->
-      <div class="tab-pane" id="tab-sd">
-        <div class="scroll">
-          <div class="sd-bar">/payloads/ — 4 files — 3.8 KB free: 14.2 GB</div>
-          <div class="file"><span class="file-ico">[D]</span><span class="file-nm">payloads/</span></div>
-          <div class="file" onclick="loadFromSD('sysinfo')"><span class="file-ico">[F]</span><span class="file-nm">sysinfo.txt</span><span class="file-sz">1.2 KB</span></div>
-          <div class="file" onclick="loadFromSD('wifi')"><span class="file-ico">[F]</span><span class="file-nm">wifi_grab.txt</span><span class="file-sz">0.8 KB</span></div>
-          <div class="file" onclick="loadFromSD('custom')"><span class="file-ico">[F]</span><span class="file-nm">custom_01.txt</span><span class="file-sz">0.5 KB</span></div>
-          <div class="file" onclick="loadFromSD('lockscreen')"><span class="file-ico">[F]</span><span class="file-nm">lockscreen.txt</span><span class="file-sz">0.3 KB</span></div>
-          <div style="padding:8px 6px;color:var(--ink2);font-size:10px;border-top:1px dashed var(--g3);margin-top:6px">
-            Click en un archivo para cargarlo en el editor
-          </div>
-        </div>
-        <div class="pf">
-          <button class="btn a" onclick="saveSD()">GUARDAR ACTUAL</button>
-          <button class="btn d" onclick="log_('SD formatear? (no implementado)','warn')">FORMAT</button>
-        </div>
       </div>
 
     </div><!-- tab-wrap -->
@@ -596,8 +543,7 @@ function usePayload(id,cat,e){
   activeId=id;
   document.getElementById('rawEd').value=found.script;
   document.getElementById('activePayload').textContent=found.name;
-  renderLib();
-  toBuilder();
+  renderLib();}
   log_(`Payload cargado: [${cat}] ${found.name}`,'ok');
 }
 
@@ -612,41 +558,7 @@ function loadFromSD(name){
     document.getElementById('rawEd').value=scripts[name];
     document.getElementById('activePayload').textContent=name+'.txt';
     log_(`[SD] Cargado: ${name}.txt`,'ok');
-    toBuilder();
   }
-}
-
-// ── BUILDER ──────────────────────────────────────────────────────────────
-function addStep(tipo,val=''){
-  const area=document.getElementById('stepsArea');
-  const div=document.createElement('div');
-  div.className='step';
-  let inner='';
-  if(tipo==='WAIT'){
-    inner=`<input type="number" value="${val||500}" style="max-width:90px"><span style="color:var(--ink2);margin-left:3px">ms</span>`;
-  } else if(tipo==='STRING'){
-    inner=`<input type="text" value="${val||''}" placeholder="texto a escribir...">`;
-  } else if(tipo==='KEY'){
-    const KS=['ENTER','GUI r','GUI l','TAB','ESCAPE','SPACE','CTRL+c','CTRL+v','CTRL+z','ALT+F4'];
-    inner=`<select>${KS.map(k=>`<option value="${k}" ${val===k?'selected':''}>${k}</option>`).join('')}</select>`;
-  } else if(tipo==='REM'){
-    inner=`<input type="text" value="${val||''}" placeholder="comentario..." style="color:var(--ink2)">`;
-  }
-  div.innerHTML=`<span class="step-t">[${tipo}]</span>${inner}<button class="kill" onclick="this.parentElement.remove()">✕</button>`;
-  area.appendChild(div);
-}
-
-function toBuilder(){
-  const area=document.getElementById('stepsArea');
-  area.innerHTML='';
-  document.getElementById('rawEd').value.split('\n').forEach(l=>{
-    l=l.trim();if(!l)return;
-    if(l.startsWith('REM'))addStep('REM',l.replace(/^REM\s*/,''));
-    else if(l.startsWith('DELAY'))addStep('WAIT',l.replace(/^DELAY\s*/,''));
-    else if(l.startsWith('STRING'))addStep('STRING',l.replace(/^STRING\s*/,''));
-    else if(['ENTER','GUI r','GUI l','GUI R','GUI L'].includes(l))addStep('KEY',l);
-  });
-  openTab('bld',document.querySelectorAll('.tab')[1]);
 }
 
 function toRaw(){
@@ -794,8 +706,6 @@ function showTutorial(){
     {t:'&nbsp;'},
     {t:'3: Cargar un payload',type:'ok'},
     {t:'  LIBRARY > payloads predefinidos.',type:'info'},
-    {t:'  BUILDER > armar pasos visualmente.',type:'info'},
-    {t:'  RAW     > escribir DuckyScript directo.',type:'info'},
     {t:'&nbsp;'},
     {t:'4: Lanzar',type:'ok'},
     {t:'  Presiona el boton rojo [LANZAR].',type:'warn'},
@@ -817,7 +727,6 @@ function showStatus(){
 // ── INIT ──────────────────────────────────────────────────────────────────
 renderDevices(DEVICES);
 renderLib();
-toBuilder();
 
 const WELCOME=[
   {t:'¡Te damos la bienvenida a BlueDucky ദ്ദി◝ ⩊ ◜)!',type:'sys',d:320},
