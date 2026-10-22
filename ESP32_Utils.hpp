@@ -63,8 +63,8 @@ class MyScanCallbacks: public NimBLEScanCallbacks {
     Serial.print(advertisedDevice->getRSSI());
     Serial.print(" dBm");
 
-    String deviceName = "Desconocido";
-    String companyName = "Desconocida";
+    String deviceName = "Equipo con nombre desconocido";
+    String companyName = "Compañía desconocida";
 
     // mostrar nombre si lo tiene disponible
     if (advertisedDevice->haveName())
@@ -124,7 +124,7 @@ class MyScanCallbacks: public NimBLEScanCallbacks {
     // se inserta el dispositivo encontrado para que se muestre en el sitio web
     //dispositivosDetectados.push_back(nuevoDispositivo);
     //Serial.println("1");
-    
+
     Serial.printf(" %d %s %s\n", 
                   nuevoDispositivo.RSSI, 
                   nuevoDispositivo.name.c_str(), 
