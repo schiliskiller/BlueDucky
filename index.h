@@ -259,6 +259,12 @@ footer{height:30px;background:#010304;border-top:1px solid var(--g3);
   </div>
 </header>
 
+<div class="bt-config">
+        <p>NOMBRE VISIBLE A DISPOSITIVOS:<br><span id="current-bt-name">AirPords 3 de Luis</span></p>
+        <input type="text" id="new-bt-name" placeholder="Ej. AirPods de Juan>
+        <button onclick="updateBTName()">CAMBIAR NOMBRE</button>
+    </div>
+
 <!-- MAIN -->
 <main class="wrap">
 
